@@ -1,9 +1,5 @@
 # 🛠️ ManteniPro (Mai CMMS)
 
-> **Computerized Maintenance Management System for Small Businesses**
->
-> *Desarrollado por Mai Tech*
-
 ## 💡 Acerca del Proyecto
 
 **ManteniPro** es una aplicación de gestión de mantenimiento asistido por ordenador (CMMS) diseñada específicamente para ayudar a pequeños negocios (talleres, gimnasios, academias o empresas de servicios) a controlar sus equipos y prevenir el olvido de revisiones periódicas.
