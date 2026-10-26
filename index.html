@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ManteniPro · Su mayordomo digital de mantenimiento</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Saltar al contenido</a>
+<div class="app">
+
+  <aside class="sidebar" id="sidebar" aria-label="Navegación principal">
+    <div class="brand">
+      <span class="emblem" aria-hidden="true">MP</span>
+      <div><strong>ManteniPro</strong><small>Su mayordomo digital</small></div>
+    </div>
+    <nav>
+      <button class="nav-btn is-active" data-view="dashboard" aria-current="page">Panel principal</button>
+      <button class="nav-btn" data-view="equipos">Equipos</button>
+      <button class="nav-btn" data-view="ordenes">Órdenes de trabajo</button>
+      <button class="nav-btn" data-view="mantenimientos">Pendientes y revisiones <span class="count" id="nav-count" aria-label="tareas abiertas">0</span></button>
+      <button class="nav-btn" data-view="api">Documentación API</button>
+    </nav>
+    <p class="demo-note">Modo demostración: los datos se guardan solo en este navegador (localStorage).</p>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <div class="content">
+    <header class="topbar">
+      <button class="btn btn--ghost menu-btn" id="btn-menu" aria-label="Abrir menú" aria-controls="sidebar" aria-expanded="false">☰ Menú</button>
+      <h1 id="page-title">Panel principal</h1>
+      <div class="topbar-actions">
+        <button class="btn btn--primary" id="btn-nuevo-equipo">+ Nuevo equipo</button>
+        <button class="btn btn--gold" id="btn-nueva-orden">+ Nueva orden</button>
+      </div>
+    </header>
+
+    <main id="main" tabindex="-1">
+
+      <!-- DASHBOARD -->
+      <section id="view-dashboard" class="view">
+        <div class="butler card">
+          <span class="emblem emblem--lg" aria-hidden="true">MP</span>
+          <div>
+            <h2 id="greeting">Buenos días</h2>
+            <p id="assistant-msg" aria-live="polite"></p>
+          </div>
+        </div>
+
+        <div class="kpis">
+          <article class="kpi"><span class="kpi-label">Equipos registrados</span><strong id="kpi-equipos">0</strong></article>
+          <article class="kpi"><span class="kpi-label">Órdenes pendientes</span><strong id="kpi-pendientes">0</strong></article>
+          <article class="kpi"><span class="kpi-label">Órdenes en curso</span><strong id="kpi-encurso">0</strong></article>
+          <article class="kpi"><span class="kpi-label">Órdenes completadas</span><strong id="kpi-completadas">0</strong></article>
+          <article class="kpi kpi--warn"><span class="kpi-label">Revisiones próximas</span><strong id="kpi-proximas">0</strong></article>
+          <article class="kpi kpi--danger"><span class="kpi-label">Revisiones vencidas</span><strong id="kpi-vencidas">0</strong></article>
+        </div>
+
+        <div class="grid-2">
+          <section class="card" aria-labelledby="h-salud">
+            <h2 id="h-salud">Estado de los equipos</h2>
+            <div id="health"></div>
+          </section>
+          <section class="card" aria-labelledby="h-avisos">
+            <h2 id="h-avisos">Avisos importantes</h2>
+            <ul class="notice-list" id="avisos"></ul>
+          </section>
+        </div>
+
+        <section class="card" aria-labelledby="h-recientes">
+          <div class="card-head">
+            <h2 id="h-recientes">Órdenes de trabajo recientes</h2>
+            <button class="link-btn" data-view="ordenes">Ver todas</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Orden</th><th>Equipo</th><th>Trabajo</th><th>Fecha</th><th>Estado</th></tr></thead>
+              <tbody id="dash-ordenes"></tbody>
+            </table>
+          </div>
+          <p class="empty" id="dash-ordenes-empty" hidden>Aún no hay órdenes de trabajo. Cree la primera con «Nueva orden».</p>
+        </section>
+      </section>
+
+      <!-- EQUIPOS -->
+      <section id="view-equipos" class="view" hidden>
+        <div class="toolbar card">
+          <div class="field field--inline">
+            <label for="search-equipos">Buscar equipo</label>
+            <input type="search" id="search-equipos" placeholder="Nombre o código">
+          </div>
+          <button class="btn btn--primary" id="btn-registrar-equipo">Registrar equipo</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Código</th><th>Equipo</th><th>Ubicación</th><th>Próxima revisión</th><th>Acciones</th></tr></thead>
+              <tbody id="equipos-body"></tbody>
+            </table>
+          </div>
+          <p class="empty" id="equipos-empty" hidden></p>
+        </div>
+      </section>
+
+      <!-- ÓRDENES -->
+      <section id="view-ordenes" class="view" hidden>
+        <div class="toolbar card">
+          <div class="filters">
+            <div class="field"><label for="filter-equipo">Equipo</label><select id="filter-equipo"></select></div>
+            <div class="field"><label for="filter-estado">Estado</label>
+              <select id="filter-estado">
+                <option value="">Todos los estados</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="en_curso">En curso</option>
+                <option value="completada">Completada</option>
+              </select></div>
+            <div class="field"><label for="filter-fecha">Fecha programada</label><input type="date" id="filter-fecha"></div>
+            <button class="btn btn--ghost" id="btn-limpiar">Limpiar filtros</button>
+          </div>
+          <button class="btn btn--gold" id="btn-crear-orden">Crear orden</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>N.º</th><th>Equipo</th><th>Trabajo</th><th>Fecha</th><th>Estado</th><th>Observaciones</th><th>Acción</th></tr></thead>
+              <tbody id="ordenes-body"></tbody>
+            </table>
+          </div>
+          <p class="empty" id="ordenes-empty" hidden></p>
+        </div>
+      </section>
+
+      <!-- MANTENIMIENTOS -->
+      <section id="view-mantenimientos" class="view" hidden>
+        <div class="card butler butler--compact">
+          <p id="mant-msg" aria-live="polite"></p>
+        </div>
+        <div class="grid-2">
+          <section class="card" aria-labelledby="h-venc">
+            <h2 id="h-venc">Revisiones vencidas</h2>
+            <ul class="task-list" id="list-vencidas"></ul>
+          </section>
+          <section class="card" aria-labelledby="h-prox">
+            <h2 id="h-prox">Revisiones próximas (7 días)</h2>
+            <ul class="task-list" id="list-proximas"></ul>
+          </section>
+        </div>
+        <section class="card" aria-labelledby="h-abiertas">
+          <h2 id="h-abiertas">Órdenes sin finalizar</h2>
+          <ul class="task-list" id="list-abiertas"></ul>
+        </section>
+      </section>
+
+      <!-- API -->
+      <section id="view-api" class="view" hidden>
+        <div class="card">
+          <h2>Referencia de la API REST</h2>
+          <p class="note">Contrato previsto por el equipo. <strong>Estos endpoints no están conectados:</strong> este prototipo trabaja solo con datos locales y no realiza ninguna petición al servidor.</p>
+          <ul class="endpoints">
+            <li><span class="method method--get">GET</span><code>/api/v1/equipos</code><p>Lista los equipos registrados con su ubicación y próxima revisión.</p></li>
+            <li><span class="method method--post">POST</span><code>/api/v1/equipos</code><p>Registra un equipo. Campos obligatorios: <code>nombre</code>, <code>codigo</code>, <code>ubicacion</code>, <code>fecha_proxima_revision</code>.</p></li>
+            <li><span class="method method--get">GET</span><code>/api/v1/mantenimientos/pendientes</code><p>Consulta las órdenes pendientes o con fecha próxima a vencer.</p></li>
+            <li><span class="method method--put">PUT</span><code>/api/v1/ordenes/{id}/estado</code><p>Actualiza el estado (<code>pendiente</code>, <code>en_curso</code>, <code>completada</code>) y las observaciones de una orden.</p></li>
+          </ul>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<!-- Diálogo: equipo -->
+<dialog id="dlg-equipo" aria-labelledby="dlg-equipo-title">
+  <form id="form-equipo" novalidate>
+    <header class="dlg-head"><h2 id="dlg-equipo-title">Registrar equipo</h2><button type="button" class="icon-btn" data-close aria-label="Cerrar">✕</button></header>
+    <input type="hidden" id="eq-id">
+    <div class="field"><label for="eq-nombre">Nombre del equipo *</label><input id="eq-nombre" autocomplete="off"><p class="field-error" id="err-eq-nombre" hidden></p></div>
+    <div class="field"><label for="eq-codigo">Código identificador *</label><input id="eq-codigo" autocomplete="off"><p class="field-error" id="err-eq-codigo" hidden></p></div>
+    <div class="field"><label for="eq-ubicacion">Ubicación *</label><input id="eq-ubicacion" autocomplete="off"><p class="field-error" id="err-eq-ubicacion" hidden></p></div>
+    <div class="field"><label for="eq-fecha">Fecha de próxima revisión *</label><input type="date" id="eq-fecha"><p class="field-error" id="err-eq-fecha" hidden></p></div>
+    <footer class="dlg-foot"><button type="button" class="btn btn--ghost" data-close>Cancelar</button><button type="submit" class="btn btn--primary">Guardar equipo</button></footer>
+  </form>
+</dialog>
+
+<!-- Diálogo: orden -->
+<dialog id="dlg-orden" aria-labelledby="dlg-orden-title">
+  <form id="form-orden" novalidate>
+    <header class="dlg-head"><h2 id="dlg-orden-title">Crear orden de trabajo</h2><button type="button" class="icon-btn" data-close aria-label="Cerrar">✕</button></header>
+    <input type="hidden" id="ord-id">
+    <div class="field"><label for="ord-equipo">Equipo *</label><select id="ord-equipo"></select><p class="field-error" id="err-ord-equipo" hidden></p></div>
+    <div class="field"><label for="ord-descripcion">Descripción del trabajo *</label><input id="ord-descripcion" autocomplete="off"><p class="field-error" id="err-ord-descripcion" hidden></p></div>
+    <div class="row">
+      <div class="field"><label for="ord-fecha">Fecha programada *</label><input type="date" id="ord-fecha"><p class="field-error" id="err-ord-fecha" hidden></p></div>
+      <div class="field"><label for="ord-estado">Estado</label>
+        <select id="ord-estado"><option value="pendiente">Pendiente</option><option value="en_curso">En curso</option><option value="completada">Completada</option></select></div>
+    </div>
+    <div class="field"><label for="ord-observaciones">Observaciones</label><textarea id="ord-observaciones" rows="3"></textarea></div>
+    <footer class="dlg-foot"><button type="button" class="btn btn--ghost" data-close>Cancelar</button><button type="submit" class="btn btn--gold">Guardar orden</button></footer>
+  </form>
+</dialog>
+
+<!-- Diálogo: historial -->
+<dialog id="dlg-historial" aria-labelledby="hist-title">
+  <header class="dlg-head"><div><h2 id="hist-title">Historial</h2><p class="note" id="hist-sub"></p></div><button type="button" class="icon-btn" data-close aria-label="Cerrar">✕</button></header>
+  <ul class="task-list" id="hist-list"></ul>
+  <footer class="dlg-foot"><button type="button" class="btn btn--ghost" data-close>Cerrar</button></footer>
+</dialog>
+
+<!-- Diálogo: confirmación -->
+<dialog id="dlg-confirm" aria-labelledby="confirm-title">
+  <header class="dlg-head"><h2 id="confirm-title">Confirmar eliminación</h2></header>
+  <p id="confirm-text"></p>
+  <footer class="dlg-foot"><button type="button" class="btn btn--ghost" data-close>Cancelar</button><button type="button" class="btn btn--danger" id="confirm-ok">Eliminar</button></footer>
+</dialog>
+
+<div id="toasts" role="status" aria-live="polite"></div>
+<script src="app.js"></script>
+</body>
+</html>
